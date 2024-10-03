@@ -81,7 +81,7 @@ func TestGame(t *testing.T) {
 							{0, 0, 0},
 							{0, 0, 0},
 						},
-						0,
+						WinnerPlayingId,
 					},
 				},
 				CellPlayer1, 0, 2,
@@ -95,7 +95,7 @@ func TestGame(t *testing.T) {
 							{1, 0, 0},
 							{0, 0, 0},
 						},
-						0,
+						WinnerPlayingId,
 					},
 				},
 				CellPlayer1, 2, 0,
@@ -109,7 +109,7 @@ func TestGame(t *testing.T) {
 							{0, 0, 0},
 							{0, 0, 1},
 						},
-						0,
+						WinnerPlayingId,
 					},
 				},
 				CellPlayer1, 1, 1,
@@ -123,7 +123,7 @@ func TestGame(t *testing.T) {
 							{0, 2, 0},
 							{0, 0, 0},
 						},
-						0,
+						WinnerPlayingId,
 					},
 				},
 				CellPlayer2, 2, 0,
@@ -139,6 +139,48 @@ func TestGame(t *testing.T) {
 			if gotWinner != wantWinner {
 				t.Errorf("expected to see %d as winner, got %d", wantWinner, gotWinner)
 			}
+		}
+	})
+
+	t.Run("when the board fills up without winners the game ends in a draw", func(t *testing.T) {
+		game := Game{
+			GameState{
+				CellPlayer1,
+				Board{
+					{1, 1, 2},
+					{2, 2, 1},
+					{1, 2, 0},
+				},
+				WinnerPlayingId,
+			},
+		}
+
+		err := game.PlaceMark(1, 2, 2)
+		assertError(t, err, nil)
+
+		gotWinner := game.State().Winner
+		wantWinner := WinnerDrawId
+		if gotWinner != wantWinner {
+			t.Errorf("expected to see %d as winner, got %d", wantWinner, gotWinner)
+		}
+	})
+
+	t.Run("no player can make a move after the game ended", func(t *testing.T) {
+		game := Game{
+			GameState{
+				CellPlayer1,
+				Board{
+					{1, 1, 1},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+				CellPlayer1,
+			},
+		}
+
+		for _, player := range [2]int{CellPlayer1, CellPlayer2} {
+			err := game.PlaceMark(player, 2, 2)
+			assertError(t, err, ErrInvalidMoveGameOver)
 		}
 	})
 
