@@ -33,6 +33,37 @@ func TestGame(t *testing.T) {
 		assertBoard(t, state, Board{{1, 0, 2}, {0, 0, 0}, {0, 0, 0}})
 		assertCurrentPlayer(t, state, CellPlayer1)
 	})
+
+	t.Run("cannot place markers during enemy's turn", func(t *testing.T) {
+		game := NewGame()
+
+		err := game.PlaceMark(CellPlayer2, 0, 0)
+		assertError(t, err, ErrInvalidMoveNotPlayerTurn)
+	})
+
+	t.Run("cannot place markers on non empty cells", func(t *testing.T) {
+		game := NewGame()
+
+		game.PlaceMark(CellPlayer1, 0, 0)
+		err := game.PlaceMark(CellPlayer2, 0, 0)
+		assertError(t, err, ErrInvalidMovePlaceOnNonEmptyCell)
+	})
+
+	t.Run("cannot place markers outside of the board", func(t *testing.T) {
+		game := NewGame()
+
+		invalidCellSamples := [][2]int{
+			{-1, 0},
+			{0, -1},
+			{3, 0},
+			{0, 3},
+		}
+
+		for _, coords := range invalidCellSamples {
+			err := game.PlaceMark(CellPlayer1, coords[0], coords[1])
+			assertError(t, err, ErrInvalidMoveInvalidCell)
+		}
+	})
 }
 
 func assertCurrentPlayer(t testing.TB, state GameState, want int) {
@@ -52,5 +83,12 @@ func assertBoard(t testing.TB, state GameState, want Board) {
 				t.Errorf("expected cell [%d,%d] to be %d, found %d", i, j, wantCell, gotCell)
 			}
 		}
+	}
+}
+
+func assertError(t testing.TB, got, want error) {
+	t.Helper()
+	if got != want {
+		t.Errorf("expected error %v, got %v", want, got)
 	}
 }
