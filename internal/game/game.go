@@ -45,5 +45,10 @@ func (g *Game) State() GameState {
 }
 
 func (g *Game) PlaceMark(player, row, col int) {
-
+	g.state.Board[row][col] = player
+	if g.state.CurrentPlayer == CellPlayer1 {
+		g.state.CurrentPlayer = CellPlayer2
+	} else {
+		g.state.CurrentPlayer = CellPlayer1
+	}
 }
