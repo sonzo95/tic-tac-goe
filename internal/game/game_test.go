@@ -64,6 +64,85 @@ func TestGame(t *testing.T) {
 			assertError(t, err, ErrInvalidMoveInvalidCell)
 		}
 	})
+
+	t.Run("making a winning move updates the game state", func(t *testing.T) {
+		tests := []struct {
+			game           Game
+			nextMovePlayer int
+			nextMoveRow    int
+			nextMoveCol    int
+		}{
+			{
+				Game{
+					GameState{
+						CellPlayer1,
+						Board{
+							{1, 1, 0},
+							{0, 0, 0},
+							{0, 0, 0},
+						},
+						0,
+					},
+				},
+				CellPlayer1, 0, 2,
+			},
+			{
+				Game{
+					GameState{
+						CellPlayer1,
+						Board{
+							{1, 0, 0},
+							{1, 0, 0},
+							{0, 0, 0},
+						},
+						0,
+					},
+				},
+				CellPlayer1, 2, 0,
+			},
+			{
+				Game{
+					GameState{
+						CellPlayer1,
+						Board{
+							{1, 0, 0},
+							{0, 0, 0},
+							{0, 0, 1},
+						},
+						0,
+					},
+				},
+				CellPlayer1, 1, 1,
+			},
+			{
+				Game{
+					GameState{
+						CellPlayer2,
+						Board{
+							{0, 0, 2},
+							{0, 2, 0},
+							{0, 0, 0},
+						},
+						0,
+					},
+				},
+				CellPlayer2, 2, 0,
+			},
+		}
+
+		for _, test := range tests {
+			err := test.game.PlaceMark(test.nextMovePlayer, test.nextMoveRow, test.nextMoveCol)
+			assertError(t, err, nil)
+
+			gotWinner := test.game.State().Winner
+			wantWinner := test.nextMovePlayer
+			if gotWinner != wantWinner {
+				t.Errorf("expected to see %d as winner, got %d", wantWinner, gotWinner)
+			}
+		}
+	})
+
+	// TODO: no empty cells left -> end in draw
 }
 
 func assertCurrentPlayer(t testing.TB, state GameState, want int) {

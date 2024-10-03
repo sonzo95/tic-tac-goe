@@ -17,6 +17,32 @@ func emptyBoard() Board {
 	return Board{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 }
 
+func checkRowWinningCon(b Board, row int) bool {
+	return b[row][0] != CellEmpty &&
+		b[row][0] == b[row][1] &&
+		b[row][0] == b[row][2]
+}
+
+func checkColWinningCon(b Board, col int) bool {
+	return b[0][col] != CellEmpty &&
+		b[0][col] == b[1][col] &&
+		b[0][col] == b[2][col]
+}
+
+func checkMainDiagonalWinningCon(b Board, row, col int) bool {
+	return row == col &&
+		b[0][0] != CellEmpty &&
+		b[0][0] == b[1][1] &&
+		b[0][0] == b[2][2]
+}
+
+func checkSecDiagonalWinningCon(b Board, row, col int) bool {
+	return row+col == 2 &&
+		b[0][2] != CellEmpty &&
+		b[0][2] == b[1][1] &&
+		b[0][2] == b[2][0]
+}
+
 const (
 	CellEmpty   = 0
 	CellPlayer1 = 1
@@ -32,6 +58,15 @@ var (
 type GameState struct {
 	CurrentPlayer int
 	Board         [3][3]int
+	Winner        int
+}
+
+func (gs *GameState) swapPlayerTurn() {
+	if gs.CurrentPlayer == CellPlayer1 {
+		gs.CurrentPlayer = CellPlayer2
+	} else {
+		gs.CurrentPlayer = CellPlayer1
+	}
 }
 
 type Game struct {
@@ -43,6 +78,7 @@ func NewGame() Game {
 		state: GameState{
 			CurrentPlayer: CellPlayer1,
 			Board:         emptyBoard(),
+			Winner:        0,
 		},
 	}
 }
@@ -65,11 +101,18 @@ func (g *Game) PlaceMark(player, row, col int) error {
 		return ErrInvalidMovePlaceOnNonEmptyCell
 	}
 
+	// place marker
 	g.state.Board[row][col] = player
-	if g.state.CurrentPlayer == CellPlayer1 {
-		g.state.CurrentPlayer = CellPlayer2
-	} else {
-		g.state.CurrentPlayer = CellPlayer1
+
+	// check winning con
+	if checkRowWinningCon(g.state.Board, row) ||
+		checkColWinningCon(g.state.Board, col) ||
+		checkMainDiagonalWinningCon(g.state.Board, row, col) ||
+		checkSecDiagonalWinningCon(g.state.Board, row, col) {
+		g.state.Winner = player
+		return nil
 	}
+
+	g.state.swapPlayerTurn()
 	return nil
 }
