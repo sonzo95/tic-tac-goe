@@ -43,3 +43,7 @@ func NewGame() Game {
 func (g *Game) State() GameState {
 	return g.state
 }
+
+func (g *Game) PlaceMark(player, row, col int) {
+
+}

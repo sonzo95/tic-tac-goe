@@ -19,6 +19,14 @@ func TestGame(t *testing.T) {
 		assertCurrentPlayer(t, state, CellPlayer1)
 		assertBoard(t, state, emptyBoard())
 	})
+
+	t.Run("making a valid move places a marker on the board and changes current player", func(t *testing.T) {
+		game := NewGame()
+		game.PlaceMark(CellPlayer1, 0, 0)
+		state := game.State()
+		assertBoard(t, state, Board{{1, 0, 0}, {0, 0, 0}, {0, 0, 0}})
+		assertCurrentPlayer(t, state, CellPlayer2)
+	})
 }
 
 func assertCurrentPlayer(t testing.TB, state GameState, want int) {
