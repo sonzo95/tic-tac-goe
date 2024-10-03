@@ -11,6 +11,10 @@ turns
 // Cells are indexed by [row][col], with indices gronwind downwards and rightwards
 type Board [3][3]int
 
+func emptyBoard() Board {
+	return Board{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
+}
+
 const (
 	CellEmpty   = 0
 	CellPlayer1 = 1
@@ -30,7 +34,7 @@ func NewGame() Game {
 	return Game{
 		state: GameState{
 			CurrentPlayer: CellPlayer1,
-			Board:         [3][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+			Board:         emptyBoard(),
 		},
 	}
 }

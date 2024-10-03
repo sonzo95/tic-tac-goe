@@ -16,15 +16,27 @@ func TestGame(t *testing.T) {
 
 		var state GameState = game.State()
 
-		if state.CurrentPlayer != CellPlayer1 {
-			t.Errorf("expected to be the turn of player 1, but it was %d", state.CurrentPlayer)
-		}
-		for i, row := range state.Board {
-			for j, cellValue := range row {
-				if cellValue != CellEmpty {
-					t.Errorf("expected cell %d %d to be %d, found %d", i, j, CellEmpty, cellValue)
-				}
+		assertCurrentPlayer(t, state, CellPlayer1)
+		assertBoard(t, state, emptyBoard())
+	})
+}
+
+func assertCurrentPlayer(t testing.TB, state GameState, want int) {
+	t.Helper()
+	if state.CurrentPlayer != want {
+		t.Errorf("expected to be the turn of player %d, but it was %d", want, state.CurrentPlayer)
+	}
+}
+
+func assertBoard(t testing.TB, state GameState, want Board) {
+	t.Helper()
+	for i := range 3 {
+		for j := range 3 {
+			gotCell := state.Board[i][j]
+			wantCell := want[i][j]
+			if gotCell != wantCell {
+				t.Errorf("expected cell [%d,%d] to be %d, found %d", i, j, wantCell, gotCell)
 			}
 		}
-	})
+	}
 }
