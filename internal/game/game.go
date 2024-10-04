@@ -44,8 +44,8 @@ func checkSecDiagonalWinningCon(b Board, row, col int) bool {
 }
 
 func isBoardFilled(b Board) bool {
-	for row := range 2 {
-		for col := range 2 {
+	for row := range 3 {
+		for col := range 3 {
 			if b[row][col] == CellEmpty {
 				return false
 			}

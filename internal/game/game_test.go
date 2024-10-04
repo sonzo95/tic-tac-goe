@@ -184,7 +184,28 @@ func TestGame(t *testing.T) {
 		}
 	})
 
-	// TODO: no empty cells left -> end in draw
+	t.Run("test draw bug", func(t *testing.T) {
+		game := Game{
+			GameState{
+				CellPlayer2,
+				Board{
+					{1, 1, 0},
+					{0, 2, 0},
+					{0, 0, 0},
+				},
+				WinnerPlayingId,
+			},
+		}
+
+		err := game.PlaceMark(2, 1, 0)
+		assertError(t, err, nil)
+
+		gotWinner := game.State().Winner
+		wantWinner := WinnerPlayingId
+		if gotWinner != wantWinner {
+			t.Errorf("expected to see %d as winner, got %d", wantWinner, gotWinner)
+		}
+	})
 }
 
 func assertCurrentPlayer(t testing.TB, state GameState, want int) {
