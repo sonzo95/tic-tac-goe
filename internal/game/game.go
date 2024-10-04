@@ -86,6 +86,11 @@ func (gs *GameState) swapPlayerTurn() {
 	}
 }
 
+type StatefulInteractableGame interface {
+	State() GameState
+	PlaceMark(player, row, col int) error
+}
+
 type Game struct {
 	state GameState
 }
