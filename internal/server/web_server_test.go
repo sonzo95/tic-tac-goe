@@ -35,10 +35,6 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("expected matchmaking to empty the whole queue, found %d connections pending", ms.connQueue.Len())
 			return
 		}
-		if ms.gamePool.Len() != n/2 {
-			t.Errorf("expected matchmaking to create %d games, found %d games", n/2, ms.gamePool.Len())
-			return
-		}
 
 		// assert that all games are also started
 		wg := sync.WaitGroup{}

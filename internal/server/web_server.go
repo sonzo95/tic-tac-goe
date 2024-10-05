@@ -29,11 +29,9 @@ func (l *GenericList[T]) PopFront() T {
 type WsMatchmaker struct {
 	connQueue GenericList[*websocket.Conn]
 	connLock  sync.Mutex
-
-	gamePool GenericList[*ConcurrentGameManager]
-	// gamePoolLock sync.Mutex
 }
 
+// TODO: do i actually need to save all games in the array?
 func (m *WsMatchmaker) Enqueue(c *websocket.Conn) {
 	m.connLock.Lock()
 	m.connQueue.PushBack(c)
@@ -45,7 +43,6 @@ func (m *WsMatchmaker) Enqueue(c *websocket.Conn) {
 			conns: []*websocket.Conn{pl1Conn, pl2Conn},
 			lock:  sync.Mutex{},
 		})
-		m.gamePool.PushBack(&gm)
 
 		go func() {
 			gm.Start()
