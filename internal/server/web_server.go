@@ -31,6 +31,10 @@ func (m *WsMatchmaker) Enqueue(c *websocket.Conn) {
 			lock:  sync.Mutex{},
 		})
 		m.gamePool.PushBack(&gm)
+
+		go func() {
+			gm.Start()
+		}()
 	}
 	m.connLock.Unlock()
 }

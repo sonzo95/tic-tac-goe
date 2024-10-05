@@ -1,10 +1,12 @@
 package server
 
 import (
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"stefano.sonzogni/tic-tac-toe/internal/game"
 )
 
 func TestMatchmaker(t *testing.T) {
@@ -16,9 +18,14 @@ func TestMatchmaker(t *testing.T) {
 		defer server.Close()
 
 		n := 50
+		conns := []*websocket.Conn{}
+		connsLock := sync.Mutex{}
 		for range n {
 			go func() {
-				dialClient(t, server)
+				c := dialClient(t, server)
+				connsLock.Lock()
+				conns = append(conns, c)
+				connsLock.Unlock()
 			}()
 		}
 
@@ -31,6 +38,15 @@ func TestMatchmaker(t *testing.T) {
 		if ms.gamePool.Len() != n/2 {
 			t.Errorf("expected matchmaking to create %d games, found %d games", n/2, ms.gamePool.Len())
 			return
+		}
+
+		// assert that all games are also started
+		wg := sync.WaitGroup{}
+		wg.Add(n)
+		for _, conn := range conns {
+			msgChan := readMessage(t, conn)
+			assertMessage(t, msgChan, game.GameState{})
+			wg.Done()
 		}
 	})
 }

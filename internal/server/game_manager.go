@@ -20,6 +20,13 @@ func NewConcurrentGameManager(broadcaster Broadcaster) ConcurrentGameManager {
 	return ConcurrentGameManager{&game.Game{}, sync.Mutex{}, broadcaster}
 }
 
+func (gm *ConcurrentGameManager) Start() {
+	gm.lock.Lock()
+	defer gm.lock.Unlock()
+
+	gm.broadcaster.BroadcastGameState(gm.g.State())
+}
+
 func (gm *ConcurrentGameManager) HandleMessage(player, row, col int) {
 	gm.lock.Lock()
 	defer gm.lock.Unlock()
