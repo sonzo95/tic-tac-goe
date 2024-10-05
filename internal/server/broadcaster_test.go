@@ -15,12 +15,16 @@ import (
 
 func TestBroadcaster(t *testing.T) {
 	t.Run("ws broadcaster can register listeners and sends messages to them", func(t *testing.T) {
-		b := WsBroadcaster{}
 		want := game.GameState{CurrentPlayer: 1, Board: [3][3]int{{0, 0, 0}, {1, 0, 0}, {1, 2, 0}}, Winner: 1}
 		nConn := 5
 
+		serverSideConnections := []*websocket.Conn{}
+		sscLock := sync.Mutex{}
+
 		server := spinUpServer(t, func(c *websocket.Conn) {
-			b.AddListener(c)
+			sscLock.Lock()
+			serverSideConnections = append(serverSideConnections, c)
+			sscLock.Unlock()
 		})
 		defer server.Close()
 
@@ -31,6 +35,10 @@ func TestBroadcaster(t *testing.T) {
 			conns = append(conns, conn)
 		}
 
+		b := WsBroadcaster{
+			conns: serverSideConnections,
+			lock:  sync.Mutex{},
+		}
 		go func() {
 			b.BroadcastGameState(want)
 		}()

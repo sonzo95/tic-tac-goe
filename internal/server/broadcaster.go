@@ -24,10 +24,3 @@ func (b *WsBroadcaster) BroadcastGameState(gs game.GameState) {
 		conn.WriteJSON(gs)
 	}
 }
-
-func (b *WsBroadcaster) AddListener(conn *websocket.Conn) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-
-	b.conns = append(b.conns, conn)
-}
