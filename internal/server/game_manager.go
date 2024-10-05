@@ -16,8 +16,8 @@ type ConcurrentGameManager struct {
 	broadcaster Broadcaster
 }
 
-func NewConcurrentGameManager(g game.StatefulInteractableGame, broadcaster Broadcaster) ConcurrentGameManager {
-	return ConcurrentGameManager{g, sync.Mutex{}, broadcaster}
+func NewConcurrentGameManager(broadcaster Broadcaster) ConcurrentGameManager {
+	return ConcurrentGameManager{&game.Game{}, sync.Mutex{}, broadcaster}
 }
 
 func (gm *ConcurrentGameManager) HandleMessage(player, row, col int) {

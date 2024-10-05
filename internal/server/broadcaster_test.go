@@ -19,7 +19,9 @@ func TestBroadcaster(t *testing.T) {
 		want := game.GameState{CurrentPlayer: 1, Board: [3][3]int{{0, 0, 0}, {1, 0, 0}, {1, 2, 0}}, Winner: 1}
 		nConn := 5
 
-		server := spinUpServer(t, &b)
+		server := spinUpServer(t, func(c *websocket.Conn) {
+			b.AddListener(c)
+		})
 		defer server.Close()
 
 		conns := []*websocket.Conn{}
@@ -43,7 +45,7 @@ func TestBroadcaster(t *testing.T) {
 	})
 }
 
-func spinUpServer(t testing.TB, b *WsBroadcaster) *httptest.Server {
+func spinUpServer(t testing.TB, onUpgrade func(*websocket.Conn)) *httptest.Server {
 	t.Helper()
 	var upgrader = websocket.Upgrader{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +54,7 @@ func spinUpServer(t testing.TB, b *WsBroadcaster) *httptest.Server {
 			t.Errorf("failed to upgrade connection to ws, %v", err)
 			return
 		}
-		b.AddListener(conn)
+		onUpgrade(conn)
 	}))
 	return server
 }
