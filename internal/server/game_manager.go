@@ -10,10 +10,6 @@ type GameManager interface {
 	HandleMessage(player, row, col int)
 }
 
-type Broadcaster interface {
-	BroadcastGameState(gs game.GameState)
-}
-
 type ConcurrentGameManager struct {
 	g           game.StatefulInteractableGame
 	lock        sync.Mutex
