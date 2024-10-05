@@ -41,8 +41,37 @@ func TestMatchmaker(t *testing.T) {
 		wg.Add(n)
 		for _, conn := range conns {
 			msgChan := readMessage(t, conn)
-			assertMessage(t, msgChan, game.GameState{})
+			assertMessage(t, msgChan, initialGameState())
 			wg.Done()
 		}
 	})
+
+	t.Run("should propagate ws client messages to games", func(t *testing.T) {
+		ms := WsMatchmaker{}
+		server := spinUpServer(t, func(c *websocket.Conn) {
+			ms.Enqueue(c)
+		})
+		defer server.Close()
+
+		pl1 := dialClient(t, server)
+		pl2 := dialClient(t, server)
+
+		msgChan := readMessage(t, pl1)
+		assertMessage(t, msgChan, initialGameState())
+		msgChan = readMessage(t, pl2)
+		assertMessage(t, msgChan, initialGameState())
+
+		pl1.WriteJSON(InputCommand{1, 0, 0})
+
+		want := game.GameState{CurrentPlayer: 2, Board: [3][3]int{{1, 0, 0}, {0, 0, 0}, {0, 0, 0}}, Winner: 0}
+		msgChan = readMessage(t, pl1)
+		assertMessage(t, msgChan, want)
+		msgChan = readMessage(t, pl2)
+		assertMessage(t, msgChan, want)
+	})
+}
+
+func initialGameState() game.GameState {
+	g := game.NewGame()
+	return g.State()
 }

@@ -17,7 +17,8 @@ type ConcurrentGameManager struct {
 }
 
 func NewConcurrentGameManager(broadcaster Broadcaster) ConcurrentGameManager {
-	return ConcurrentGameManager{&game.Game{}, sync.Mutex{}, broadcaster}
+	g := game.NewGame()
+	return ConcurrentGameManager{&g, sync.Mutex{}, broadcaster}
 }
 
 func (gm *ConcurrentGameManager) Start() {
