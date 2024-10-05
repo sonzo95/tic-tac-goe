@@ -7,11 +7,30 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type GenericList[T any] struct {
+	data list.List
+}
+
+func (l *GenericList[T]) Len() int {
+	return l.data.Len()
+}
+
+func (l *GenericList[T]) PushBack(t T) {
+	l.data.PushBack(t)
+}
+
+func (l *GenericList[T]) PopFront() T {
+	f := l.data.Front()
+	v := f.Value.(T)
+	l.data.Remove(f)
+	return v
+}
+
 type WsMatchmaker struct {
-	connQueue list.List // *websocket.Conn
+	connQueue GenericList[*websocket.Conn]
 	connLock  sync.Mutex
 
-	gamePool list.List // *ConcurrentGameManager
+	gamePool GenericList[*ConcurrentGameManager]
 	// gamePoolLock sync.Mutex
 }
 
@@ -19,13 +38,9 @@ func (m *WsMatchmaker) Enqueue(c *websocket.Conn) {
 	m.connLock.Lock()
 	m.connQueue.PushBack(c)
 	for m.connQueue.Len() >= 2 {
-		pl1Elem := m.connQueue.Front()
-		m.connQueue.Remove(pl1Elem)
-		pl2Elem := m.connQueue.Front()
-		m.connQueue.Remove(pl2Elem)
+		pl1Conn := m.connQueue.PopFront()
+		pl2Conn := m.connQueue.PopFront()
 
-		pl1Conn := pl1Elem.Value.(*websocket.Conn)
-		pl2Conn := pl2Elem.Value.(*websocket.Conn)
 		gm := NewConcurrentGameManager(&WsBroadcaster{
 			conns: []*websocket.Conn{pl1Conn, pl2Conn},
 			lock:  sync.Mutex{},
