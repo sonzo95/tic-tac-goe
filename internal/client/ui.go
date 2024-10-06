@@ -22,8 +22,14 @@ const (
 	bottomRow = "└───┴───┴───┘"
 )
 
+var playerMap = map[int]string{
+	0: " ",
+	1: "X",
+	2: "O",
+}
+
 func makeBoardRow(row [3]int) string {
-	return fmt.Sprintf("│ %d │ %d │ %d │", row[0], row[1], row[2])
+	return fmt.Sprintf("│ %s │ %s │ %s │", playerMap[row[0]], playerMap[row[1]], playerMap[row[2]])
 }
 
 func (ui UI) RenderGame(s game.GameState, cell Cell, msg string, playerId int) {

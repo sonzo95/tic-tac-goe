@@ -20,11 +20,17 @@ type Game struct {
 	state            game.GameState
 }
 
-func NewGame(ui GameRenderer, commandCh chan Command, updatesCh chan server.StateUpdate) *Game {
+func NewGame(
+	ui GameRenderer,
+	userCommandCh chan Command,
+	serverUpdatesCh chan server.StateUpdate,
+	serverCommandsCh chan server.InputCommand,
+) *Game {
 	return &Game{
-		ui:              ui,
-		userCommandsCh:  commandCh,
-		serverUpdatesCh: updatesCh,
+		ui:               ui,
+		userCommandsCh:   userCommandCh,
+		serverUpdatesCh:  serverUpdatesCh,
+		serverCommandsCh: serverCommandsCh,
 	}
 }
 

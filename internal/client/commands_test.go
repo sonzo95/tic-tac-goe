@@ -90,6 +90,8 @@ func TestCommandRight(t *testing.T) {
 func TestCommandPlaceMarker(t *testing.T) {
 	t.Run("sends a command to the server commands channel", func(t *testing.T) {
 		g := Game{playerId: 2, serverCommandsCh: make(chan server.InputCommand, 1)}
+		g.cursorX = 2
+		g.cursorY = 1
 
 		commandPlaceMarker(&g)
 
@@ -97,8 +99,8 @@ func TestCommandPlaceMarker(t *testing.T) {
 		case got := <-g.serverCommandsCh:
 			want := server.InputCommand{
 				Player: g.playerId,
-				Row:    g.cursorX,
-				Col:    g.cursorY,
+				Row:    g.cursorY,
+				Col:    g.cursorX,
 			}
 
 			if got != want {
