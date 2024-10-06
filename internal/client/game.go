@@ -5,11 +5,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
+	"stefano.sonzogni/tic-tac-toe/internal/game"
 )
 
 type Game struct {
+	// state, current highlighted cell, ui, channels?
 }
 
 func (g *Game) Start() {
@@ -20,17 +21,11 @@ func (g *Game) Start() {
 		os.Exit(1)
 	}
 
-	tbprint(2, 2, termbox.ColorRed, termbox.ColorDefault, "Hello terminal!")
+	ui := UI{termbox.ColorWhite, termbox.ColorDefault, termbox.ColorDefault, termbox.ColorWhite}
+	ui.printBoard(0, 0, game.Board{{1, 2, 0}, {1, 2, 2}, {0, 0, 0}})
+	ui.highlight(2, 1)
 	termbox.Flush()
 
-	time.Sleep(time.Second)
+	time.Sleep(4 * time.Second)
 	termbox.Close()
-}
-
-// This function is often useful:
-func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
-	for _, c := range msg {
-		termbox.SetCell(x, y, c, fg, bg)
-		x += runewidth.RuneWidth(c)
-	}
 }
