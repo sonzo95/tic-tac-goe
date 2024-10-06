@@ -1,31 +1,57 @@
 package client
 
 import (
-	"fmt"
-	"os"
-	"time"
-
-	"github.com/nsf/termbox-go"
 	"stefano.sonzogni/tic-tac-toe/internal/game"
+	"stefano.sonzogni/tic-tac-toe/internal/server"
 )
 
 type Game struct {
-	// state, current highlighted cell, ui, channels?
+	ui               GameRenderer
+	commandCh        chan Command
+	updatesCh        chan server.StateUpdate
+	cursorX, cursorY int
+	msg              string
+	quit             bool
+	playerId         int
+	state            game.GameState
+}
+
+func NewGame(ui GameRenderer, commandCh chan Command, updatesCh chan server.StateUpdate) *Game {
+	return &Game{
+		ui:        ui,
+		commandCh: commandCh,
+		updatesCh: updatesCh,
+	}
 }
 
 func (g *Game) Start() {
-	err := termbox.Init()
+	g.render()
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	for !g.quit {
+		g.msg = ""
+
+		// should become select on commands and server events
+		select {
+		case cmd := <-g.commandCh:
+			cmd(g)
+		case update := <-g.updatesCh:
+			g.playerId = update.AssignedPlayerId
+			g.state = update.State
+		}
+
+		g.render()
 	}
+}
 
-	ui := UI{termbox.ColorWhite, termbox.ColorDefault, termbox.ColorDefault, termbox.ColorWhite}
-	ui.printBoard(0, 0, game.Board{{1, 2, 0}, {1, 2, 2}, {0, 0, 0}})
-	ui.highlight(2, 1)
-	termbox.Flush()
+func (g *Game) render() {
+	g.ui.RenderGame(
+		g.state,
+		Cell{g.cursorX, g.cursorY},
+		g.msg,
+		g.playerId,
+	)
+}
 
-	time.Sleep(4 * time.Second)
-	termbox.Close()
+type Cell struct {
+	r, c int
 }
