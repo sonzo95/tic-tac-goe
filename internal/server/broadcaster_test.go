@@ -15,7 +15,7 @@ import (
 
 func TestBroadcaster(t *testing.T) {
 	t.Run("ws broadcaster can register listeners and sends messages to them", func(t *testing.T) {
-		want := game.GameState{CurrentPlayer: 1, Board: [3][3]int{{0, 0, 0}, {1, 0, 0}, {1, 2, 0}}, Winner: 1}
+		gs := game.GameState{CurrentPlayer: 1, Board: [3][3]int{{0, 0, 0}, {1, 0, 0}, {1, 2, 0}}, Winner: 1}
 		nConn := 5
 
 		serverSideConnections := []*websocket.Conn{}
@@ -40,13 +40,17 @@ func TestBroadcaster(t *testing.T) {
 			lock:  sync.Mutex{},
 		}
 		go func() {
-			b.BroadcastGameState(want)
+			b.BroadcastGameState(gs)
 		}()
 
 		wg := sync.WaitGroup{}
 		wg.Add(nConn)
-		for _, conn := range conns {
+		for i, conn := range conns {
 			msgChan := readMessage(t, conn)
+			want := StateUpdate{
+				State:            gs,
+				AssignedPlayerId: i + 1,
+			}
 			assertMessage(t, msgChan, want)
 			wg.Done()
 		}
@@ -91,11 +95,11 @@ func readMessage(t testing.TB, conn *websocket.Conn) chan string {
 	return msgChan
 }
 
-func assertMessage(t testing.TB, msgChan chan string, want game.GameState) {
+func assertMessage(t testing.TB, msgChan chan string, want StateUpdate) {
 	select {
 	case msg := <-msgChan:
 		// todo assert on msg contents
-		var got game.GameState
+		var got StateUpdate
 		err := json.NewDecoder(strings.NewReader(msg)).Decode(&got)
 		if err != nil {
 			t.Errorf("failed to decode ws msg %s, %v", msg, err)

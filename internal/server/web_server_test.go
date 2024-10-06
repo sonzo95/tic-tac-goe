@@ -3,7 +3,6 @@ package server
 import (
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"stefano.sonzogni/tic-tac-toe/internal/game"
@@ -19,17 +18,10 @@ func TestMatchmaker(t *testing.T) {
 
 		n := 50
 		conns := []*websocket.Conn{}
-		connsLock := sync.Mutex{}
 		for range n {
-			go func() {
-				c := dialClient(t, server)
-				connsLock.Lock()
-				conns = append(conns, c)
-				connsLock.Unlock()
-			}()
+			c := dialClient(t, server)
+			conns = append(conns, c)
 		}
-
-		time.Sleep(50 * time.Millisecond)
 
 		if ms.connQueue.Len() != 0 {
 			t.Errorf("expected matchmaking to empty the whole queue, found %d connections pending", ms.connQueue.Len())
@@ -39,9 +31,12 @@ func TestMatchmaker(t *testing.T) {
 		// assert that all games are also started
 		wg := sync.WaitGroup{}
 		wg.Add(n)
-		for _, conn := range conns {
+		for i, conn := range conns {
 			msgChan := readMessage(t, conn)
-			assertMessage(t, msgChan, initialGameState())
+			assertMessage(t, msgChan, StateUpdate{
+				State:            initialGameState(),
+				AssignedPlayerId: (i % 2) + 1,
+			})
 			wg.Done()
 		}
 	})
@@ -57,17 +52,17 @@ func TestMatchmaker(t *testing.T) {
 		pl2 := dialClient(t, server)
 
 		msgChan := readMessage(t, pl1)
-		assertMessage(t, msgChan, initialGameState())
+		assertMessage(t, msgChan, StateUpdate{initialGameState(), 1})
 		msgChan = readMessage(t, pl2)
-		assertMessage(t, msgChan, initialGameState())
+		assertMessage(t, msgChan, StateUpdate{initialGameState(), 2})
 
 		pl1.WriteJSON(InputCommand{1, 0, 0})
 
 		want := game.GameState{CurrentPlayer: 2, Board: [3][3]int{{1, 0, 0}, {0, 0, 0}, {0, 0, 0}}, Winner: 0}
 		msgChan = readMessage(t, pl1)
-		assertMessage(t, msgChan, want)
+		assertMessage(t, msgChan, StateUpdate{want, 1})
 		msgChan = readMessage(t, pl2)
-		assertMessage(t, msgChan, want)
+		assertMessage(t, msgChan, StateUpdate{want, 2})
 	})
 }
 

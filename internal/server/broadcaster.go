@@ -20,7 +20,9 @@ func (b *WsBroadcaster) BroadcastGameState(gs game.GameState) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
-	for _, conn := range b.conns {
-		conn.WriteJSON(gs)
+	for i, conn := range b.conns {
+		// TODO: the broadcaster shouldn't be responsible to assign player ids to connections,
+		// but for the time being we can get away with this
+		conn.WriteJSON(StateUpdate{gs, i + 1})
 	}
 }
