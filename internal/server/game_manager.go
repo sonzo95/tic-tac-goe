@@ -32,6 +32,8 @@ func (gm *ConcurrentGameManager) HandleMessage(player, row, col int) {
 	gm.lock.Lock()
 	defer gm.lock.Unlock()
 
-	gm.g.PlaceMark(player, row, col)
-	gm.broadcaster.BroadcastGameState(gm.g.State())
+	err := gm.g.PlaceMark(player, row, col)
+	if err == nil {
+		gm.broadcaster.BroadcastGameState(gm.g.State())
+	}
 }

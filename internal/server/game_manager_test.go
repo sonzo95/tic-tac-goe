@@ -81,6 +81,16 @@ func TestGameManager(t *testing.T) {
 		want = append(want, gm.g.State())
 		assertBroadcasts(t, broadcaster, want)
 	})
+
+	t.Run("invalid moves are ignored and not broadcasted to listeners", func(t *testing.T) {
+		g := game.NewGame()
+		broadcaster := &broadcasterSpy{}
+		gm := ConcurrentGameManager{&g, sync.Mutex{}, broadcaster}
+
+		gm.HandleMessage(2, 0, 0)
+		want := []game.GameState{}
+		assertBroadcasts(t, broadcaster, want)
+	})
 }
 
 func assertNumberOfMoves(t testing.TB, gs gameSpy, want int) {
