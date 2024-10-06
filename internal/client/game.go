@@ -6,9 +6,13 @@ import (
 )
 
 type Game struct {
-	ui               GameRenderer
-	commandCh        chan Command
-	updatesCh        chan server.StateUpdate
+	ui GameRenderer
+	// input channel that allows to send commands to the game
+	userCommandsCh chan Command
+	// input channel that allows to send state updates to the game
+	serverUpdatesCh chan server.StateUpdate
+	// output channel that allows to send commands to the server
+	serverCommandsCh chan server.InputCommand
 	cursorX, cursorY int
 	msg              string
 	quit             bool
@@ -18,9 +22,9 @@ type Game struct {
 
 func NewGame(ui GameRenderer, commandCh chan Command, updatesCh chan server.StateUpdate) *Game {
 	return &Game{
-		ui:        ui,
-		commandCh: commandCh,
-		updatesCh: updatesCh,
+		ui:              ui,
+		userCommandsCh:  commandCh,
+		serverUpdatesCh: updatesCh,
 	}
 }
 
@@ -32,9 +36,9 @@ func (g *Game) Start() {
 
 		// should become select on commands and server events
 		select {
-		case cmd := <-g.commandCh:
+		case cmd := <-g.userCommandsCh:
 			cmd(g)
-		case update := <-g.updatesCh:
+		case update := <-g.serverUpdatesCh:
 			g.playerId = update.AssignedPlayerId
 			g.state = update.State
 		}

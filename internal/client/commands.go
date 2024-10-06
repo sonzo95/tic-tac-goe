@@ -1,5 +1,7 @@
 package client
 
+import "stefano.sonzogni/tic-tac-toe/internal/server"
+
 type Command func(g *Game)
 
 func commandLeft(g *Game) {
@@ -27,7 +29,7 @@ func commandDown(g *Game) {
 }
 
 func commandPlaceMarker(g *Game) {
-	g.msg = "Placed!"
+	g.serverCommandsCh <- server.InputCommand{Player: g.playerId, Row: g.cursorX, Col: g.cursorY}
 }
 
 func commandQuit(g *Game) {

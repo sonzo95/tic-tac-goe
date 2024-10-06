@@ -1,6 +1,11 @@
 package client
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	"stefano.sonzogni/tic-tac-toe/internal/server"
+)
 
 type cursorTest struct {
 	cX, cY, wantX, wantY int
@@ -83,10 +88,25 @@ func TestCommandRight(t *testing.T) {
 }
 
 func TestCommandPlaceMarker(t *testing.T) {
-	// TODO: test some channel or thing that writes onto websocket
-	t.Run("TBD", func(t *testing.T) {
-		g := Game{}
+	t.Run("sends a command to the server commands channel", func(t *testing.T) {
+		g := Game{playerId: 2, serverCommandsCh: make(chan server.InputCommand, 1)}
+
 		commandPlaceMarker(&g)
+
+		select {
+		case got := <-g.serverCommandsCh:
+			want := server.InputCommand{
+				Player: g.playerId,
+				Row:    g.cursorX,
+				Col:    g.cursorY,
+			}
+
+			if got != want {
+				t.Errorf("expected to write %v to server, found %v", want, got)
+			}
+		case <-time.After(time.Second):
+			t.Errorf("expected to receive a server command")
+		}
 	})
 }
 
