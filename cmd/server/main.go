@@ -26,7 +26,7 @@ func main() {
 			return
 		}
 		slog.Debug("connection established")
-		matchmaker.Enqueue(conn)
+		matchmaker.HandleConnection(conn)
 	})
 
 	err := http.ListenAndServe(":5001", mux)

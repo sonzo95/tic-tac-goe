@@ -1,12 +1,56 @@
 package server
 
-import "stefano.sonzogni/tic-tac-toe/internal/game"
+import (
+	"stefano.sonzogni/tic-tac-toe/internal/game"
+)
 
-// Object that the server is able to precess when sent by a client via websockets
-type InputCommand struct {
-	Player int
-	Row    int
-	Col    int
+const (
+	ClientMessageConnect     = "connect"
+	ClientMessagePlaceMarker = "placeMarker"
+
+	ServerMessageWaitingForMatchmaking = "waitingForMatchmaking"
+	ServerMessageStartGame             = "startGame"
+	ServerMessageUpdateGame            = "updateGame"
+)
+
+type ClientMessage struct {
+	Msg        string          `json:"msg"`
+	PlayerName string          `json:"player_name"`
+	Placement  MarkerPlacement `json:"marker_placement"`
+}
+
+type ServerMessage struct {
+	Msg              string         `json:"msg"`
+	AssignedPlayerId int            `json:"assigned_player_id"`
+	OpponentName     string         `json:"opponent_name"`
+	GameState        game.GameState `json:"game_state"`
+}
+
+func NewSMWaitingForMatchmaking() ServerMessage {
+	return ServerMessage{
+		Msg: ServerMessageWaitingForMatchmaking,
+	}
+}
+
+func NewSMStartGame(pid int, opponentName string, g game.GameState) ServerMessage {
+	return ServerMessage{
+		Msg:              ServerMessageStartGame,
+		AssignedPlayerId: pid,
+		OpponentName:     opponentName,
+		GameState:        g,
+	}
+}
+
+func NewSMUpdateGame(g game.GameState) ServerMessage {
+	return ServerMessage{
+		Msg:       ServerMessageUpdateGame,
+		GameState: g,
+	}
+}
+
+type MarkerPlacement struct {
+	Row int
+	Col int
 }
 
 // Object that the server broadcasts to all connected players

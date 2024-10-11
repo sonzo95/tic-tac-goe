@@ -1,39 +1,43 @@
 package server
 
 import (
-	"sync"
-
 	"stefano.sonzogni/tic-tac-toe/internal/game"
 )
 
-type GameManager interface {
-	HandleMessage(player, row, col int)
-}
-
 type ConcurrentGameManager struct {
-	g           game.StatefulInteractableGame
-	lock        sync.Mutex
-	broadcaster Broadcaster
+	g      game.StatefulInteractableGame
+	p1, p2 *player
 }
 
-func NewConcurrentGameManager(broadcaster Broadcaster) ConcurrentGameManager {
+func NewConcurrentGameManager(p1, p2 *player) *ConcurrentGameManager {
 	g := game.NewGame()
-	return ConcurrentGameManager{&g, sync.Mutex{}, broadcaster}
+	return &ConcurrentGameManager{&g, p1, p2}
 }
 
 func (gm *ConcurrentGameManager) Start() {
-	gm.lock.Lock()
-	defer gm.lock.Unlock()
+	gs := gm.g.State()
+	gm.p1.wc <- NewSMStartGame(1, gm.p2.name, gs)
+	gm.p2.wc <- NewSMStartGame(2, gm.p1.name, gs)
 
-	gm.broadcaster.BroadcastGameState(gm.g.State())
+	for {
+		select {
+		case msg := <-gm.p1.rc:
+			gm.HandleMessage(1, msg)
+		case msg := <-gm.p2.rc:
+			gm.HandleMessage(2, msg)
+		}
+	}
 }
 
-func (gm *ConcurrentGameManager) HandleMessage(player, row, col int) {
-	gm.lock.Lock()
-	defer gm.lock.Unlock()
+func (gm *ConcurrentGameManager) HandleMessage(player int, msg ClientMessage) {
+	if msg.Msg != ClientMessagePlaceMarker {
+		return
+	}
 
-	err := gm.g.PlaceMark(player, row, col)
+	err := gm.g.PlaceMark(player, msg.Placement.Row, msg.Placement.Col)
 	if err == nil {
-		gm.broadcaster.BroadcastGameState(gm.g.State())
+		s := gm.g.State()
+		gm.p1.wc <- NewSMUpdateGame(s)
+		gm.p2.wc <- NewSMUpdateGame(s)
 	}
 }
