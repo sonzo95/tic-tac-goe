@@ -12,7 +12,7 @@ func TestGame(t *testing.T) {
 	t.Run("commands get processed and trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		cc := make(chan Command, 1)
-		g := NewGame(&r, cc, make(chan server.ServerMessage), make(chan server.ClientMessage))
+		g := NewGame(1, "", "", &r, cc, make(chan server.ServerMessage), make(chan server.ClientMessage))
 		go g.Start()
 
 		executed := false
@@ -30,7 +30,7 @@ func TestGame(t *testing.T) {
 	t.Run("state updates trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		su := make(chan server.ServerMessage, 1)
-		g := NewGame(&r, make(chan Command), su, make(chan server.ClientMessage))
+		g := NewGame(2, "", "", &r, make(chan Command), su, make(chan server.ClientMessage))
 		go g.Start()
 
 		newBoard := game.Board{{1, 1, 1}, {2, 2, 2}, {1, 1, 1}}
@@ -44,6 +44,57 @@ func TestGame(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		assertRenderCount(t, r, 2)
+	})
+
+	t.Run("state updates trigger rerender", func(t *testing.T) {
+		r := GameRendererSpy{}
+		su := make(chan server.ServerMessage, 1)
+		g := NewGame(2, "", "", &r, make(chan Command), su, make(chan server.ClientMessage))
+		go g.Start()
+
+		newBoard := game.Board{{1, 1, 1}, {2, 2, 2}, {1, 1, 1}}
+		newState := game.GameState{
+			Board:         newBoard,
+			CurrentPlayer: 2,
+			Winner:        2,
+		}
+		su <- server.NewSMUpdateGame(newState)
+
+		time.Sleep(10 * time.Millisecond)
+
+		assertRenderCount(t, r, 2)
+		assertLastRender(t, r, newState, 2)
+
+		// also ignores state updates from non-update massegaes
+		messages := []server.ServerMessage{
+			server.NewSMStartGame(1, "", game.GameState{}),
+			server.NewSMWaitingForMatchmaking(),
+			server.NewSMOpponentDisconnected(),
+		}
+		for i, msg := range messages {
+			su <- msg
+
+			time.Sleep(10 * time.Millisecond)
+
+			assertRenderCount(t, r, 3+i)
+			assertLastRender(t, r, newState, 2)
+		}
+	})
+
+	t.Run("disconnection messages trigger rerender", func(t *testing.T) {
+		r := GameRendererSpy{}
+		su := make(chan server.ServerMessage, 1)
+		g := NewGame(2, "", "", &r, make(chan Command), su, make(chan server.ClientMessage))
+		go g.Start()
+
+		su <- server.NewSMOpponentDisconnected()
+
+		time.Sleep(10 * time.Millisecond)
+
+		assertRenderCount(t, r, 2)
+		if !g.opponentDisconnected {
+			t.Error("expected opponent to be marked as disconnected")
+		}
 	})
 }
 

@@ -12,15 +12,21 @@ type Game struct {
 	// input channel that allows to send state updates to the game
 	serverUpdatesCh chan server.ServerMessage
 	// output channel that allows to send commands to the server
-	serverCommandsCh chan server.ClientMessage
-	cursorX, cursorY int
-	msg              string
-	quit             bool
-	playerId         int
-	state            game.GameState
+	serverCommandsCh     chan server.ClientMessage
+	cursorX, cursorY     int
+	msg                  string
+	quit                 bool
+	playerId             int
+	state                game.GameState
+	playerName           string
+	opponentName         string
+	opponentDisconnected bool
 }
 
 func NewGame(
+	playerId int,
+	playerName string,
+	opponentName string,
 	ui GameRenderer,
 	userCommandCh chan Command,
 	serverUpdatesCh chan server.ServerMessage,
@@ -31,6 +37,9 @@ func NewGame(
 		userCommandsCh:   userCommandCh,
 		serverUpdatesCh:  serverUpdatesCh,
 		serverCommandsCh: serverCommandsCh,
+		playerId:         playerId,
+		playerName:       playerName,
+		opponentName:     opponentName,
 	}
 }
 
@@ -45,8 +54,12 @@ func (g *Game) Start() {
 		case cmd := <-g.userCommandsCh:
 			cmd(g)
 		case update := <-g.serverUpdatesCh:
-			g.playerId = update.AssignedPlayerId
-			g.state = update.GameState
+			switch update.Msg {
+			case server.ServerMessageUpdateGame:
+				g.state = update.GameState
+			case server.ServerMessageOpponentDisconnected:
+				g.opponentDisconnected = true
+			}
 		}
 
 		g.render()
