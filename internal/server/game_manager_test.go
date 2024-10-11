@@ -101,6 +101,46 @@ func TestGameManager(t *testing.T) {
 		want := []move{}
 		assertMoves(t, g, want)
 	})
+
+	t.Run("sends disconnection message if player 1 disconnects", func(t *testing.T) {
+		g := gameSpy{}
+		p1 := newPlayer()
+		p2 := newPlayer()
+		gm := ConcurrentGameManager{&g, p1, p2}
+		go gm.Start()
+
+		time.Sleep(10 * time.Millisecond)
+		<-p1.wc
+		<-p2.wc
+
+		p1.disconnected <- struct{}{}
+
+		time.Sleep(10 * time.Millisecond)
+
+		want := NewSMOpponentDisconnected()
+		assertServerMessageOnWriteQueue(t, p2, 2, want)
+		assertNoServerMessageOnWriteQueue(t, p1, 1)
+	})
+
+	t.Run("sends disconnection message if player 2 disconnects", func(t *testing.T) {
+		g := gameSpy{}
+		p1 := newPlayer()
+		p2 := newPlayer()
+		gm := ConcurrentGameManager{&g, p1, p2}
+		go gm.Start()
+
+		time.Sleep(10 * time.Millisecond)
+		<-p1.wc
+		<-p2.wc
+
+		p2.disconnected <- struct{}{}
+
+		time.Sleep(10 * time.Millisecond)
+
+		want := NewSMOpponentDisconnected()
+		assertServerMessageOnWriteQueue(t, p1, 1, want)
+		assertNoServerMessageOnWriteQueue(t, p2, 2)
+	})
 }
 
 func assertMoves(t testing.TB, g gameSpy, want []move) {
@@ -163,7 +203,7 @@ func newPlayer() *player {
 	return &player{
 		rc:           make(chan ClientMessage, 16),
 		wc:           make(chan ServerMessage, 16),
-		disconnected: false,
+		disconnected: make(chan struct{}, 1),
 	}
 }
 

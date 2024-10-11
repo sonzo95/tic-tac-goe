@@ -11,6 +11,7 @@ const (
 	ServerMessageWaitingForMatchmaking = "waitingForMatchmaking"
 	ServerMessageStartGame             = "startGame"
 	ServerMessageUpdateGame            = "updateGame"
+	ServerMessageOpponentDisconnected  = "opponentDisconnected"
 )
 
 type ClientMessage struct {
@@ -45,6 +46,12 @@ func NewSMUpdateGame(g game.GameState) ServerMessage {
 	return ServerMessage{
 		Msg:       ServerMessageUpdateGame,
 		GameState: g,
+	}
+}
+
+func NewSMOpponentDisconnected() ServerMessage {
+	return ServerMessage{
+		Msg: ServerMessageOpponentDisconnected,
 	}
 }
 

@@ -55,7 +55,11 @@ func TestPlayer(t *testing.T) {
 
 		time.Sleep(10 * time.Millisecond)
 
-		if !p.disconnected {
+		select {
+		case <-p.disconnected:
+			// ok
+			return
+		case <-time.After(10 * time.Millisecond):
 			t.Errorf("expected client to be disconnected")
 		}
 	})

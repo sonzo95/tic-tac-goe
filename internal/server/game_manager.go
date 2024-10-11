@@ -25,6 +25,12 @@ func (gm *ConcurrentGameManager) Start() {
 			gm.HandleMessage(1, msg)
 		case msg := <-gm.p2.rc:
 			gm.HandleMessage(2, msg)
+		case <-gm.p1.disconnected:
+			gm.p2.wc <- NewSMOpponentDisconnected()
+			return
+		case <-gm.p2.disconnected:
+			gm.p1.wc <- NewSMOpponentDisconnected()
+			return
 		}
 	}
 }

@@ -10,13 +10,14 @@ type player struct {
 	name         string
 	rc           chan ClientMessage
 	wc           chan ServerMessage
-	disconnected bool
+	disconnected chan struct{}
 }
 
 func NewPlayer(c *websocket.Conn) *player {
 	p := player{
-		rc: make(chan ClientMessage, 16),
-		wc: make(chan ServerMessage, 16),
+		rc:           make(chan ClientMessage, 16),
+		wc:           make(chan ServerMessage, 16),
+		disconnected: make(chan struct{}, 1),
 	}
 	go p.readMessages(c)
 	go p.writeMessages(c)
@@ -30,7 +31,8 @@ func (pl *player) readMessages(c *websocket.Conn) {
 		if e != nil {
 			c.Close()
 			close(pl.rc)
-			pl.disconnected = true
+			pl.disconnected <- struct{}{}
+			// close(pl.disconnected)
 			return
 		}
 		if t == websocket.TextMessage {
