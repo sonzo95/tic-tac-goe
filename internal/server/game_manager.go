@@ -1,6 +1,8 @@
 package server
 
 import (
+	"log/slog"
+
 	"stefano.sonzogni/tic-tac-toe/internal/game"
 )
 
@@ -22,8 +24,10 @@ func (gm *ConcurrentGameManager) Start() {
 	for {
 		select {
 		case msg := <-gm.p1.rc:
+			slog.Info("received message", "player", gm.p1.name, "msg", msg)
 			gm.HandleMessage(1, msg)
 		case msg := <-gm.p2.rc:
+			slog.Info("received message", "player", gm.p1.name, "msg", msg)
 			gm.HandleMessage(2, msg)
 		case <-gm.p1.disconnected:
 			gm.p2.wc <- NewSMOpponentDisconnected()

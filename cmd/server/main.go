@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	matchmaker := server.WsMatchmaker{}
+	matchmaker := server.NewWsMatchmaker()
 
 	mux := http.NewServeMux()
 
@@ -19,13 +19,13 @@ func main() {
 	}
 
 	mux.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
-		slog.Debug("received play request")
+		slog.Info("received play request")
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		slog.Debug("connection established")
+		slog.Info("connection established")
 		matchmaker.HandleConnection(conn)
 	})
 

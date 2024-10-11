@@ -48,7 +48,7 @@ func NewGame(
 func (g *Game) Start() {
 	g.render()
 
-	for !g.quit {
+	for !g.quit && !g.opponentDisconnected {
 		g.msg = ""
 
 		// should become select on commands and server events
@@ -61,6 +61,7 @@ func (g *Game) Start() {
 				g.state = update.GameState
 			case server.ServerMessageOpponentDisconnected:
 				g.opponentDisconnected = true
+				g.msg = "The opponent left!"
 			}
 		}
 

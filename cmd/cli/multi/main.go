@@ -12,17 +12,17 @@ import (
 )
 
 func main() {
-	conn := connectToServer(5001)
-	serverUpdatesCh := make(chan server.ServerMessage, 16)
-	serverCommandsCh := make(chan server.ClientMessage, 16)
-	go readUpdates(conn, serverUpdatesCh)
-	go writeInputs(conn, serverCommandsCh)
-
 	fmt.Print("Enter your name: ")
 	var name string
 	fmt.Scanln(&name)
 
 	fmt.Println("Connecting...")
+
+	conn := connectToServer(5001)
+	serverUpdatesCh := make(chan server.ServerMessage, 16)
+	serverCommandsCh := make(chan server.ClientMessage, 16)
+	go readUpdates(conn, serverUpdatesCh)
+	go writeInputs(conn, serverCommandsCh)
 
 	serverCommandsCh <- server.NewCMConnect(name)
 	msg := <-serverUpdatesCh

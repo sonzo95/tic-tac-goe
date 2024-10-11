@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"sync"
 	"time"
 
@@ -24,16 +25,20 @@ func NewWsMatchmaker() *WsMatchmaker {
 }
 
 func (m *WsMatchmaker) HandleConnection(c *websocket.Conn) {
+	slog.Info("handling new connection")
 	p := NewPlayer(c)
 
 	select {
 	case <-time.After(m.connTimeout):
+		slog.Info("connection timed out, didn't receive connect message")
 		c.Close()
 		return
 	case m := <-p.rc:
 		if m.Msg == ClientMessageConnect {
+			slog.Info("connected player", "name", m.PlayerName)
 			p.name = m.PlayerName
 		} else {
+			slog.Info("received message different from connect, closing connection")
 			c.Close()
 			return
 		}
@@ -56,6 +61,7 @@ func (m *WsMatchmaker) enqueue(p *player) {
 }
 
 func makeGame(pl1, pl2 *player) {
+	slog.Info("starting new game", "p1_name", pl1.name, "p2_name", pl2.name)
 	gm := NewConcurrentGameManager(pl1, pl2)
-	gm.Start()
+	go gm.Start()
 }

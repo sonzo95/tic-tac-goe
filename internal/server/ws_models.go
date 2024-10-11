@@ -29,7 +29,7 @@ func NewCMConnect(pName string) ClientMessage {
 
 func NewCMPlaceMarker(row, col int) ClientMessage {
 	return ClientMessage{
-		Msg: ClientMessageConnect,
+		Msg: ClientMessagePlaceMarker,
 		Placement: MarkerPlacement{
 			Row: row,
 			Col: col,
