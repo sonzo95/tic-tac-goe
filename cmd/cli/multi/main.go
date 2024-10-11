@@ -19,8 +19,8 @@ func main() {
 	}
 
 	conn := connectToServer(5001)
-	serverUpdatesCh := make(chan server.StateUpdate, 16)
-	serverCommandsCh := make(chan server.InputCommand, 16)
+	serverUpdatesCh := make(chan server.ServerMessage, 16)
+	serverCommandsCh := make(chan server.ClientMessage, 16)
 	go readUpdates(conn, serverUpdatesCh)
 	go writeInputs(conn, serverCommandsCh)
 
@@ -52,9 +52,9 @@ func connectToServer(port int) *websocket.Conn {
 	return conn
 }
 
-func readUpdates(conn *websocket.Conn, out chan server.StateUpdate) {
+func readUpdates(conn *websocket.Conn, out chan server.ServerMessage) {
 	for {
-		var update server.StateUpdate
+		var update server.ServerMessage
 		err := conn.ReadJSON(&update)
 		if err != nil {
 			fmt.Printf("Failed to decode server message: %v", err)
@@ -64,7 +64,7 @@ func readUpdates(conn *websocket.Conn, out chan server.StateUpdate) {
 	}
 }
 
-func writeInputs(conn *websocket.Conn, in chan server.InputCommand) {
+func writeInputs(conn *websocket.Conn, in chan server.ClientMessage) {
 	for {
 		input := <-in
 		err := conn.WriteJSON(input)
