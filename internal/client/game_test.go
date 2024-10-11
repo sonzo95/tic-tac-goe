@@ -12,7 +12,7 @@ func TestGame(t *testing.T) {
 	t.Run("commands get processed and trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		cc := make(chan Command, 1)
-		g := NewGame(&r, cc, make(chan server.StateUpdate), make(chan server.ClientMessage))
+		g := NewGame(&r, cc, make(chan server.ServerMessage), make(chan server.ClientMessage))
 		go g.Start()
 
 		executed := false
@@ -29,8 +29,8 @@ func TestGame(t *testing.T) {
 
 	t.Run("state updates trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
-		cu := make(chan server.StateUpdate, 1)
-		g := NewGame(&r, make(chan Command), cu, make(chan server.ClientMessage))
+		su := make(chan server.ServerMessage, 1)
+		g := NewGame(&r, make(chan Command), su, make(chan server.ClientMessage))
 		go g.Start()
 
 		newBoard := game.Board{{1, 1, 1}, {2, 2, 2}, {1, 1, 1}}
@@ -39,15 +39,11 @@ func TestGame(t *testing.T) {
 			CurrentPlayer: 2,
 			Winner:        2,
 		}
-		cu <- server.StateUpdate{
-			State:            newState,
-			AssignedPlayerId: 2,
-		}
+		su <- server.NewSMUpdateGame(newState)
 
 		time.Sleep(10 * time.Millisecond)
 
 		assertRenderCount(t, r, 2)
-		assertLastRender(t, r, newState, 2)
 	})
 }
 

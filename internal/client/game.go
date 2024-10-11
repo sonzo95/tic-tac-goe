@@ -10,7 +10,7 @@ type Game struct {
 	// input channel that allows to send commands to the game
 	userCommandsCh chan Command
 	// input channel that allows to send state updates to the game
-	serverUpdatesCh chan server.StateUpdate
+	serverUpdatesCh chan server.ServerMessage
 	// output channel that allows to send commands to the server
 	serverCommandsCh chan server.ClientMessage
 	cursorX, cursorY int
@@ -23,7 +23,7 @@ type Game struct {
 func NewGame(
 	ui GameRenderer,
 	userCommandCh chan Command,
-	serverUpdatesCh chan server.StateUpdate,
+	serverUpdatesCh chan server.ServerMessage,
 	serverCommandsCh chan server.ClientMessage,
 ) *Game {
 	return &Game{
@@ -46,7 +46,7 @@ func (g *Game) Start() {
 			cmd(g)
 		case update := <-g.serverUpdatesCh:
 			g.playerId = update.AssignedPlayerId
-			g.state = update.State
+			g.state = update.GameState
 		}
 
 		g.render()
