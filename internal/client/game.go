@@ -12,7 +12,7 @@ type Game struct {
 	// input channel that allows to send state updates to the game
 	serverUpdatesCh chan server.StateUpdate
 	// output channel that allows to send commands to the server
-	serverCommandsCh chan server.InputCommand
+	serverCommandsCh chan server.ClientMessage
 	cursorX, cursorY int
 	msg              string
 	quit             bool
@@ -24,7 +24,7 @@ func NewGame(
 	ui GameRenderer,
 	userCommandCh chan Command,
 	serverUpdatesCh chan server.StateUpdate,
-	serverCommandsCh chan server.InputCommand,
+	serverCommandsCh chan server.ClientMessage,
 ) *Game {
 	return &Game{
 		ui:               ui,

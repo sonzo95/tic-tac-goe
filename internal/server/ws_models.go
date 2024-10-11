@@ -20,6 +20,23 @@ type ClientMessage struct {
 	Placement  MarkerPlacement `json:"marker_placement"`
 }
 
+func NewCMConnect(pName string) ClientMessage {
+	return ClientMessage{
+		Msg:        ClientMessageConnect,
+		PlayerName: pName,
+	}
+}
+
+func NewCMPlaceMarker(row, col int) ClientMessage {
+	return ClientMessage{
+		Msg: ClientMessageConnect,
+		Placement: MarkerPlacement{
+			Row: row,
+			Col: col,
+		},
+	}
+}
+
 type ServerMessage struct {
 	Msg              string         `json:"msg"`
 	AssignedPlayerId int            `json:"assigned_player_id"`

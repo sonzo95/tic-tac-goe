@@ -29,7 +29,7 @@ func commandDown(g *Game) {
 }
 
 func commandPlaceMarker(g *Game) {
-	g.serverCommandsCh <- server.InputCommand{Player: g.playerId, Row: g.cursorY, Col: g.cursorX}
+	g.serverCommandsCh <- server.NewCMPlaceMarker(g.cursorY, g.cursorX)
 }
 
 func commandQuit(g *Game) {

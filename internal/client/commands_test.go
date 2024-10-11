@@ -89,7 +89,7 @@ func TestCommandRight(t *testing.T) {
 
 func TestCommandPlaceMarker(t *testing.T) {
 	t.Run("sends a command to the server commands channel", func(t *testing.T) {
-		g := Game{playerId: 2, serverCommandsCh: make(chan server.InputCommand, 1)}
+		g := Game{playerId: 2, serverCommandsCh: make(chan server.ClientMessage, 1)}
 		g.cursorX = 2
 		g.cursorY = 1
 
@@ -97,11 +97,7 @@ func TestCommandPlaceMarker(t *testing.T) {
 
 		select {
 		case got := <-g.serverCommandsCh:
-			want := server.InputCommand{
-				Player: g.playerId,
-				Row:    g.cursorY,
-				Col:    g.cursorX,
-			}
+			want := server.NewCMPlaceMarker(g.cursorY, g.cursorX)
 
 			if got != want {
 				t.Errorf("expected to write %v to server, found %v", want, got)
