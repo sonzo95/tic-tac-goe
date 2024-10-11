@@ -32,7 +32,7 @@ func (pl *player) readMessages(c *websocket.Conn) {
 			c.Close()
 			close(pl.rc)
 			pl.disconnected <- struct{}{}
-			// close(pl.disconnected)
+			close(pl.disconnected)
 			return
 		}
 		if t == websocket.TextMessage {
