@@ -12,7 +12,7 @@ func TestGame(t *testing.T) {
 	t.Run("commands get processed and trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		cc := make(chan Command, 1)
-		g := NewGame(1, "", "", &r, cc, make(chan server.ServerMessage), make(chan server.ClientMessage))
+		g := NewGame(1, "", "", initialState(), &r, cc, make(chan server.ServerMessage), make(chan server.ClientMessage))
 		go g.Start()
 
 		executed := false
@@ -30,7 +30,7 @@ func TestGame(t *testing.T) {
 	t.Run("state updates trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		su := make(chan server.ServerMessage, 1)
-		g := NewGame(2, "", "", &r, make(chan Command), su, make(chan server.ClientMessage))
+		g := NewGame(2, "", "", initialState(), &r, make(chan Command), su, make(chan server.ClientMessage))
 		go g.Start()
 
 		newBoard := game.Board{{1, 1, 1}, {2, 2, 2}, {1, 1, 1}}
@@ -49,7 +49,7 @@ func TestGame(t *testing.T) {
 	t.Run("state updates trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		su := make(chan server.ServerMessage, 1)
-		g := NewGame(2, "", "", &r, make(chan Command), su, make(chan server.ClientMessage))
+		g := NewGame(2, "", "", initialState(), &r, make(chan Command), su, make(chan server.ClientMessage))
 		go g.Start()
 
 		newBoard := game.Board{{1, 1, 1}, {2, 2, 2}, {1, 1, 1}}
@@ -84,7 +84,7 @@ func TestGame(t *testing.T) {
 	t.Run("disconnection messages trigger rerender", func(t *testing.T) {
 		r := GameRendererSpy{}
 		su := make(chan server.ServerMessage, 1)
-		g := NewGame(2, "", "", &r, make(chan Command), su, make(chan server.ClientMessage))
+		g := NewGame(2, "", "", initialState(), &r, make(chan Command), su, make(chan server.ClientMessage))
 		go g.Start()
 
 		su <- server.NewSMOpponentDisconnected()
@@ -130,4 +130,12 @@ type GameRendererSpy struct {
 
 func (gr *GameRendererSpy) RenderGame(s game.GameState, cell Cell, msg string, playerId int) {
 	gr.renders = append(gr.renders, RenderData{s, cell, msg, playerId})
+}
+
+func initialState() game.GameState {
+	return game.GameState{
+		CurrentPlayer: 1,
+		Board:         [3][3]int{},
+		Winner:        0,
+	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/nsf/termbox-go"
@@ -11,18 +12,41 @@ import (
 )
 
 func main() {
+	conn := connectToServer(5001)
+	serverUpdatesCh := make(chan server.ServerMessage, 16)
+	serverCommandsCh := make(chan server.ClientMessage, 16)
+	go readUpdates(conn, serverUpdatesCh)
+	go writeInputs(conn, serverCommandsCh)
+
+	fmt.Print("Enter your name: ")
+	var name string
+	fmt.Scanln(&name)
+
+	fmt.Println("Connecting...")
+
+	serverCommandsCh <- server.NewCMConnect(name)
+	msg := <-serverUpdatesCh
+	if msg.Msg != server.ServerMessageWaitingForMatchmaking {
+		fmt.Println("Received unexpected message from server")
+		os.Exit(1)
+	}
+	fmt.Println("Waiting for an opponent...")
+
+	msg = <-serverUpdatesCh
+	if msg.Msg != server.ServerMessageStartGame {
+		fmt.Println("Received unexpected message from server")
+		os.Exit(1)
+	}
+	fmt.Printf("Opponent found! %s\n", msg.OpponentName)
+
+	time.Sleep(time.Second)
+
 	err := termbox.Init()
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	conn := connectToServer(5001)
-	serverUpdatesCh := make(chan server.ServerMessage, 16)
-	serverCommandsCh := make(chan server.ClientMessage, 16)
-	go readUpdates(conn, serverUpdatesCh)
-	go writeInputs(conn, serverCommandsCh)
 
 	ui := client.UI{
 		DefaultFg:     termbox.ColorWhite,
@@ -34,7 +58,15 @@ func main() {
 	userCommandCh := make(chan client.Command, 10)
 	go client.ListenKeyboard(userCommandCh)
 
-	g := client.NewGame(ui, userCommandCh, serverUpdatesCh, serverCommandsCh)
+	g := client.NewGame(
+		msg.AssignedPlayerId,
+		name, msg.OpponentName,
+		msg.GameState,
+		ui,
+		userCommandCh,
+		serverUpdatesCh,
+		serverCommandsCh,
+	)
 	g.Start()
 
 	termbox.Close()

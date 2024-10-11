@@ -27,6 +27,7 @@ func NewGame(
 	playerId int,
 	playerName string,
 	opponentName string,
+	initialState game.GameState,
 	ui GameRenderer,
 	userCommandCh chan Command,
 	serverUpdatesCh chan server.ServerMessage,
@@ -40,6 +41,7 @@ func NewGame(
 		playerId:         playerId,
 		playerName:       playerName,
 		opponentName:     opponentName,
+		state:            initialState,
 	}
 }
 
